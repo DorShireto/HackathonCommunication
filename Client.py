@@ -1,34 +1,51 @@
-import getch
+# import getch
+import msvcrt
 import socket
 import struct
 
-serverPort = 2058 
+def getchar():
+    return msvcrt.getche()
+    #return getch.getch() #uncomment me while using LINUX
+
+
+
+gotPort=False
 clientSocketTCP = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 clientSocketUDP = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-clientSocketUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1) #SO_REUSEPORT allow multi client connection
+# clientSocketUDP.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1) #SO_REUSEPORT allow multi client connection
 # # client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 clientSocketUDP.bind(('',13117))
 
 
 
-print("Client started, listening for offer requests from remote server...")
+print("Client started, listening for UDP offer requests from remote server...")
 
 #listening for udp over port 13117 - 1024 is buffer size
-msg, serverDetails = clientSocketUDP.recvfrom(1024)
-msg = struct.unpack('Ibh',b'10')
-print(msg)
+while not gotPort:
+    msg, serverDetails = clientSocketUDP.recvfrom(1024)
+    msg = struct.unpack('Ibh',msg)
+    if msg[0] == 4276993775 and msg[1] == 2:
+        serverPort=msg[2]
+        gotPort=True
+
 serverAddress = serverDetails[0]
 
 
 #serverPort = port will be in l5-6 bytes of the msg
 
 clientSocketTCP.connect((serverAddress,serverPort))
-print("connected to server...")
+print("connected to server via TCP...")
+
+msg = clientSocketTCP.recv(1024)
+print(msg.decode())
+msg = clientSocketTCP.recv(1024)
+print(msg.decode())
+
 #TODO:handle connection exception
 while True:
-    char = getch.getch()
+    char = getchar()
     print(char) #TODO debug
-    clientSocketTCP.send(char.encode())
+    clientSocketTCP.send(char)
 
 
     

@@ -12,14 +12,18 @@ serverPort = 2058
 serverName = "DeaD_l0ck_Av0idErs"
 connectionsList = []
 addresses=[]
+teamANames = []
+teamBNames = []
+scoreA = 0
+scoreB = 0
 players = {} # key: client address | value: [clientName, clientTeam(A or B)]
-instructionsMsg = "************************************************\n " \
-                  "Hello Player!!!\n" \
-                  "Welcome to "+serverName+" server.\n" \
-                  " game will start in 10 seconds.\n" \
-                  " Your goal is to type as much charecters as you can within 10 seconds\n" \
-                  "Now wait for starting announcement\n" \
-                  "************************************************"
+# instructionsMsg = "************************************************\n " \
+#                   "Hello Player!!!\n" \
+#                   "Welcome to "+serverName+" server.\n" \
+#                   " game will start in 10 seconds.\n" \
+#                   " Your goal is to type as much charecters as you can within 10 seconds\n" \
+#                   "Now wait for starting announcement\n" \
+#                   "************************************************"
 
 
 #**********************************************************************************************
@@ -34,7 +38,7 @@ def acceptClients():
         clientName = connectionSocketTCP.recv(1024)
         print(clientName.decode())
         print("established connection with",addr)
-        connectionSocketTCP.send(instructionsMsg.encode())
+        # connectionSocketTCP.send(instructionsMsg.encode())
 
 
 def createUDPSocket():
@@ -73,38 +77,92 @@ def acceptClients():
         clientName = connectionSocketTCP.recv(1024)
         players[addr] = [clientName,team]
         if team == 2:
+            teamBNames.append(clientName)
             team = 1
         else:
+            teamANames.append(clientName)
             team = 2
         print(clientName.decode())
-        print("established connection with",addr)
+        print("established connection with",addr) #TODO debug
         connectionSocketTCP.send(instructionsMsg.encode())
 
 def closePreGameSockets():
+    # acceptThread.join()
     serverSocket.close()
     serverSocketUDP.close()
 
 
 def gameOnAnnouncment():
+    welcomeMSG = "Welcome to Keyboard Spamming Battle Royale.\nGroup A:\n==\n"
+    for teamName in teamANames:
+        welcomeMSG+=teamName
+    welcomeMSG+="Group B:\n==\n"
+    for teamName in teamBNames:
+        welcomeMSG+=teamName
+    welcomeMSG += "Start pressing keys on your keyboard as fast as you can!!"
     for TCP_connectionToClient in connectionsList:
-        TCP_connectionToClient.send(b'GAME ON !!!!!!!!\nSTART SPAMMING !!!!!!!')
+        TCP_connectionToClient.send(welcomeMSG.encode())
 
 def summaryGame():
+    summaryMSG = "Game over!\n Group A typed in " + scoreA + " characters.\n Group B typed in " + scoreB + " characters.\n"
+    winningTeam = ""
+    if scoreA > scoreB:
+        winningTeam = "A"
+        summaryMSG += "Group "+ winningTeam + " wins!\n\nCongratulations to the winners:\n==\n"
+        #loop over players and get clients names
+        for name in teamANames:
+            summaryMSG+=name
 
+    elif scoreB > scoreA:
+        winningTeam = "B"
+        summaryMSG += "Group "+ winningTeam + " wins!\n\nCongratulations to the winners:\n==\n"
+        #loop over players and get clients names
+        for name in teamBNames:
+            summaryMSG+=name
+    else:
+        summaryMSG += "It's a draw!!\n"
+
+    #iterate over all conections and send summaryMSG
+    for TCP_connectionToClient in connectionsList:
+        TCP_connectionToClient.send(summaryMSG.encode())
+
+
+
+
+
+# players = {} # key: client address | value: [clientName, clientTeam(A or B)]
 
 def game():
-    while True:
+    timeout = 10
+    startTime = time.time()
+    while timeout > time.time() - startTime :
         for connectionToClient in connectionsList:
             connectionToClient.settimeout(0.1)
             try:
-                char = connectionToClient.recv(1024)
-                
+                char, clientAddr = connectionToClient.recvfrom(1)
+                if players[clientAddr][1] == 1: #team A
+                    scoreA += 1
+                else:
+                    scoreB += 1
                 # print("ignore " ,ignore)
                 # if char == "":
                 #     connectionToClient.close()
                 print(char.decode())
             except Exception as e:
                 continue
+
+def clearServerInfo():
+    #close all TCP sockets
+    for TCP_connectionToClient in connectionsList:
+        TCP_connectionToClient.close()
+    connectionsList = []
+    addresses=[]
+    teamANames = []
+    teamBNames = []
+    scoreA = 0
+    scoreB = 0
+    players = {}
+
 
 #**********************************************************************************************
 #                         SCRIPT PART
@@ -120,6 +178,7 @@ while 1:
     gameOnAnnouncment()
     game()
     summaryGame()
+    print("Game over, sending out offer requests...")
 
 
 

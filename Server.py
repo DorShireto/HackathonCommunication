@@ -4,6 +4,7 @@ import threading
 import time
 
 
+
 class Server:
     # **********************************************************************************************
     #                                          ATRIBUTES
@@ -13,9 +14,9 @@ class Server:
         self.serverSocketUDP = None
         self.serverSocket = None
         self.serverPort = 2058
-		self.broadcastADDR = 255.255.255.255
-		self.broadcastPort = 13117
-        self.serverName = "DeaD_l0ck_Av0iders"
+        self.broadcastADDR = '255.255.255.255'
+        self.broadcastPort = 13117
+        self.serverName = "DeaD_l0ck_Av0iders\n"
         self.connectionsList = []
         self.addresses = []
         self.teamANames = []
@@ -50,8 +51,8 @@ class Server:
         self.serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.serverSocket.bind(("", self.serverPort))
         self.serverSocket.listen(20)  #mean how many clients can connect
-        acceptThread.daemon = True # allows the thread to not block other program, when the main program will die the thread will die to (if program died unexpectedly)
         acceptThread = threading.Thread(target=self.acceptClients) #start acceptClients on diffrent thread
+        acceptThread.daemon = True # allows the thread to not block other program, when the main program will die the thread will die to (if program died unexpectedly)
         acceptThread.start()
 
 
@@ -160,11 +161,11 @@ class Server:
 #                         SCRIPT PART
 #
 # **********************************************************************************************
-
-
 server = Server()
 server.createTCPSocket()
+serverAddr = "172.18.0.58"
 while 1: #Server machine will keep on running until forced to stop
+    print("Server started, listening on IP address: ", serverAddr)
     try:
         server.createUDPSocket()
         server.broadcastUDP()

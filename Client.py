@@ -11,9 +11,9 @@ class Client:
 #
 #**********************************************************************************************
     def __init__(self):
-		self.listeningUDPPort = 13117
-		#self.listeningUDPPort = 13115 #for tests uses only 
-        self.teamName = "DeaD_l0ck_Av0idErs"
+        self.listeningUDPPort = 13115
+        #self.listeningUDPPort = 13115 #for tests uses only 
+        self.teamName = "DeaD_l0ck_Av0idErs\n"
         self.serverPort = None
         self.gotPort=False
         self.serverAddress = None
@@ -54,7 +54,7 @@ class Client:
                 self.serverPort=msg[2]
                 self.gotPort=True
         serverAddress = serverDetails[0] #IP address
-        print("Received offer from " + serverAddress +" attempting to connect... ”")
+        print("Received offer from " + serverAddress +" attempting to connect... ")
 
 
     def game(self):
